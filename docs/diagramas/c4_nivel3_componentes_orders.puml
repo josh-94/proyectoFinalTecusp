@@ -1,0 +1,100 @@
+@startuml c4_nivel3_componentes_orders
+' ============================================================
+' C4 - NIVEL 3: DIAGRAMA DE COMPONENTES - orders-service
+' Muestra la arquitectura hexagonal (puertos y adaptadores)
+' PlantUML puro (no requiere internet ni librerias externas).
+' ============================================================
+title Diagrama de Componentes (C4 - Nivel 3)\norders-service - Arquitectura Hexagonal (Puertos y Adaptadores)
+
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam shadowing false
+skinparam ArrowColor #707070
+skinparam ArrowFontColor #404040
+skinparam nodesep 20
+skinparam ranksep 40
+skinparam rectangle<<ext>> {
+  BackgroundColor #999999
+  FontColor white
+  BorderColor #6E6E6E
+}
+skinparam rectangle<<adapter>> {
+  BackgroundColor #85BBF0
+  FontColor #0B2F52
+  BorderColor #5A9BD4
+}
+skinparam rectangle<<app>> {
+  BackgroundColor #438DD5
+  FontColor white
+  BorderColor #2E6FA8
+}
+skinparam rectangle<<domain>> {
+  BackgroundColor #F2C94C
+  FontColor #4A3B00
+  BorderColor #C9A227
+}
+skinparam database<<ext>> {
+  BackgroundColor #999999
+  FontColor white
+  BorderColor #6E6E6E
+}
+skinparam queue<<ext>> {
+  BackgroundColor #999999
+  FontColor white
+  BorderColor #6E6E6E
+}
+skinparam rectangle<<boundary>> {
+  BackgroundColor white
+  BorderColor #1168BD
+  BorderThickness 2
+  FontColor #1168BD
+}
+
+rectangle "**API Gateway**\n<size:9>[Spring Cloud Gateway]</size>" as gw <<ext>>
+queue "**Apache Kafka**\n<size:9>[Message Broker]</size>" as kafka <<ext>>
+database "**BD Orders**\n<size:9>[PostgreSQL]</size>" as orddb <<ext>>
+rectangle "**inventory-service**\n<size:9>[Spring Boot]</size>" as invsvc <<ext>>
+
+rectangle "orders-service" as bnd <<boundary>> {
+
+  rectangle "**PedidoController**\n<size:9>[Adapter IN - REST]</size>\n--\nExpone endpoints REST\npara crear y consultar pedidos." as rest <<adapter>>
+  rectangle "**StockEventConsumer**\n<size:9>[Adapter IN - Messaging]</size>\n--\nConsume eventos\nstock.reservado / insuficiente." as cons <<adapter>>
+
+  rectangle "**Puertos de Entrada**\n<size:9>[Application - Port IN]</size>\n--\nInterfaces que exponen\nlos casos de uso." as pin <<app>>
+  rectangle "**CrearPedidoUseCase**\n<size:9>[Application - Use Case]</size>\n--\nOrquesta la creacion del\npedido e inicia la Saga." as uc1 <<app>>
+  rectangle "**ActualizarEstadoPedido**\n**UseCase**\n<size:9>[Application - Use Case]</size>\n--\nTransiciona el pedido segun\nel resultado de stock." as uc2 <<app>>
+  rectangle "**Puertos de Salida**\n<size:9>[Application - Port OUT]</size>\n--\nInterfaces requeridas:\nrepositorio y publicador." as pout <<app>>
+
+  rectangle "**Modelo de Dominio**\n<size:9>[Domain]</size>\n--\nPedido, LineaDePedido,\nEstadoPedido, eventos y\nreglas de negocio puras." as dom <<domain>>
+
+  rectangle "**PedidoRepositoryAdapter**\n<size:9>[Adapter OUT - Persistence]</size>\n--\nImplementa el puerto de\npersistencia con Spring Data JPA." as jpa <<adapter>>
+  rectangle "**PedidoEventPublisher**\n<size:9>[Adapter OUT - Messaging]</size>\n--\nImplementa el puerto de\neventos publicando en Kafka." as prod <<adapter>>
+}
+
+gw    --> rest : Reenvia peticiones\n<size:9>[JSON / REST]</size>
+kafka --> cons : Entrega eventos\nde stock <size:9>[Kafka]</size>
+
+rest --> pin : Invoca
+cons --> pin : Invoca
+pin  ..> uc1 : implementado por
+pin  ..> uc2 : implementado por
+
+uc1 --> dom  : Usa reglas de
+uc2 --> dom  : Usa reglas de
+uc1 --> pout : Depende de
+uc2 --> pout : Depende de
+
+pout ..> jpa  : implementado por
+pout ..> prod : implementado por
+
+jpa  --> orddb : Lee / escribe\n<size:9>[JDBC]</size>
+prod --> kafka : Publica pedido.creado\n<size:9>[Kafka]</size>
+rest --> invsvc : Valida disponibilidad\n<size:9>[REST sincrono]</size>
+
+legend right
+  <#F2C94C> Dominio   <#438DD5> Aplicacion
+  <#85BBF0> Adaptadores   <#999999> Sistemas externos
+  Las dependencias apuntan siempre hacia el dominio.
+endlegend
+
+@enduml

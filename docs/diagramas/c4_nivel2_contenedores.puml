@@ -1,0 +1,94 @@
+@startuml c4_nivel2_contenedores
+' ============================================================
+' C4 - NIVEL 2: DIAGRAMA DE CONTENEDORES
+' Sistema Distribuido de Gestion de Inventario Medico y Devoluciones
+' PlantUML puro (no requiere internet ni librerias externas).
+' ============================================================
+title Diagrama de Contenedores (C4 - Nivel 2)\nSistema de Gestion de Inventario Medico y Devoluciones
+
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam shadowing false
+skinparam ArrowColor #707070
+skinparam ArrowFontColor #404040
+skinparam nodesep 18
+skinparam ranksep 45
+skinparam rectangle<<person>> {
+  BackgroundColor #08427B
+  FontColor white
+  BorderColor #052E56
+}
+skinparam rectangle<<app>> {
+  BackgroundColor #1168BD
+  FontColor white
+  BorderColor #0B4884
+}
+skinparam rectangle<<svc>> {
+  BackgroundColor #438DD5
+  FontColor white
+  BorderColor #2E6FA8
+}
+skinparam database<<db>> {
+  BackgroundColor #438DD5
+  FontColor white
+  BorderColor #2E6FA8
+}
+skinparam queue<<bus>> {
+  BackgroundColor #438DD5
+  FontColor white
+  BorderColor #2E6FA8
+}
+skinparam rectangle<<boundary>> {
+  BackgroundColor white
+  BorderColor #1168BD
+  BorderThickness 2
+  FontColor #1168BD
+}
+
+rectangle "**Personal Hospitalario**\n<size:10>[Persona]</size>" as staff <<person>>
+rectangle "**Operador de Almacen**\n<size:10>[Persona]</size>" as ware <<person>>
+rectangle "**Inspector**\n<size:10>[Persona]</size>" as insp <<person>>
+
+rectangle "Sistema de Gestion de Inventario Medico y Devoluciones" as bnd <<boundary>> {
+
+  rectangle "**Aplicacion Cliente**\n<size:10>[Flutter - Android/iOS/Web]</size>\n--\nInterfaz multiplataforma\npara todos los actores." as app <<app>>
+
+  rectangle "**API Gateway**\n<size:10>[Spring Cloud Gateway]</size>\n--\nPunto unico de entrada.\nEnruta, valida JWT y\naplica rate limiting." as gw <<app>>
+
+  rectangle "**identity-service**\n<size:10>[Spring Boot]</size>\n--\nAutenticacion, emision de\nJWT y gestion RBAC." as idsvc <<svc>>
+  rectangle "**inventory-service**\n<size:10>[Spring Boot]</size>\n--\nCatalogo, stock por lote\ny alertas de caducidad." as invsvc <<svc>>
+  rectangle "**orders-service**\n<size:10>[Spring Boot]</size>\n--\nCiclo de vida de pedidos:\ncreacion, reserva, despacho." as ordsvc <<svc>>
+  rectangle "**returns-service**\n<size:10>[Spring Boot]</size>\n--\nDevoluciones, inspeccion\ny decision final." as retsvc <<svc>>
+
+  database "**BD Identity**\n<size:9>[PostgreSQL]</size>" as iddb <<db>>
+  database "**BD Inventory**\n<size:9>[PostgreSQL]</size>" as invdb <<db>>
+  database "**BD Orders**\n<size:9>[PostgreSQL]</size>" as orddb <<db>>
+  database "**BD Returns**\n<size:9>[PostgreSQL]</size>" as retdb <<db>>
+
+  queue "**Apache Kafka**\n<size:10>[Message Broker]</size>\n--\nBus de eventos de dominio\npara comunicacion asincrona." as kafka <<bus>>
+}
+
+staff --> app : Usa <size:9>[HTTPS]</size>
+ware  --> app : Usa <size:9>[HTTPS]</size>
+insp  --> app : Usa <size:9>[HTTPS]</size>
+
+app --> gw : Llama a la API\n<size:9>[JSON / HTTPS]</size>
+
+gw --> idsvc  : Enruta <size:9>[REST]</size>
+gw --> invsvc : Enruta <size:9>[REST]</size>
+gw --> ordsvc : Enruta <size:9>[REST]</size>
+gw --> retsvc : Enruta <size:9>[REST]</size>
+
+idsvc  --> iddb  : JDBC
+invsvc --> invdb : JDBC
+ordsvc --> orddb : JDBC
+retsvc --> retdb : JDBC
+
+ordsvc --> invsvc : Valida disponibilidad\n<size:9>[REST sincrono]</size>
+retsvc --> ordsvc : Valida pedido original\n<size:9>[REST sincrono]</size>
+
+ordsvc --> kafka : Publica / consume\n<size:9>[pedido.*, stock.*]</size>
+invsvc --> kafka : Publica / consume\n<size:9>[stock.*, pedido.*, devolucion.*]</size>
+retsvc --> kafka : Publica / consume\n<size:9>[devolucion.*, pedido.*]</size>
+
+@enduml

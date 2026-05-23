@@ -1,0 +1,14 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9999/auth/.well-known/jwks.json
+  cloud:
+    gateway:
+      routes: []   # sin rutas reales en tests; el ReactiveJwtDecoder viene mockeado
+
+logging:
+  level:
+    org.springframework.cloud.gateway: WARN
+    org.springframework.security: WARN

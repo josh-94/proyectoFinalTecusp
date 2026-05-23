@@ -1,0 +1,3 @@
+com\grupo10\orders\infrastructure\adapter\in\messaging\StockReservadoConsumerTest.class
+com\grupo10\orders\application\service\CrearPedidoServiceTest.class
+com\grupo10\orders\infrastructure\adapter\in\rest\PedidoControllerTest.class

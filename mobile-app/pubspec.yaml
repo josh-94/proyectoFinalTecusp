@@ -1,0 +1,43 @@
+name: med_inventory
+description: Sistema de Gestión de Inventario Médico - Grupo 10
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navegación
+  go_router: ^13.2.0
+
+  # HTTP
+  dio: ^5.4.3+1
+
+  # Estado
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Almacenamiento local (JWT)
+  shared_preferences: ^2.2.3
+
+  # Tablas
+  data_table_2: ^2.5.14
+
+  # UI utilities
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,40 @@
+@startuml c4_nivel1_contexto
+' ============================================================
+' C4 - NIVEL 1: DIAGRAMA DE CONTEXTO DEL SISTEMA
+' Sistema Distribuido de Gestion de Inventario Medico y Devoluciones
+' Grupo 10 - Trabajo Individual - Tipo A
+' PlantUML puro (no requiere internet ni librerias externas).
+' ============================================================
+title Diagrama de Contexto (C4 - Nivel 1)\nSistema de Gestion de Inventario Medico y Devoluciones
+
+skinparam backgroundColor white
+skinparam defaultFontName Helvetica
+skinparam shadowing false
+skinparam ArrowColor #707070
+skinparam ArrowFontColor #404040
+skinparam rectangle<<person>> {
+  BackgroundColor #08427B
+  FontColor white
+  BorderColor #052E56
+}
+skinparam rectangle<<system>> {
+  BackgroundColor #1168BD
+  FontColor white
+  BorderColor #0B4884
+}
+
+rectangle "**Personal Hospitalario**\n<size:10>[Persona]</size>\n--\nCrea pedidos de insumos e\ninicia devoluciones." as staff <<person>>
+rectangle "**Operador de Almacen**\n<size:10>[Persona]</size>\n--\nGestiona lotes, stock y\nprocesa despachos." as ware <<person>>
+rectangle "**Inspector**\n<size:10>[Persona]</size>\n--\nInspecciona instrumental\ndevuelto y decide su destino." as insp <<person>>
+rectangle "**Administrador**\n<size:10>[Persona]</size>\n--\nGestiona usuarios, roles\ny catalogo de productos." as adm <<person>>
+rectangle "**Auditor**\n<size:10>[Persona]</size>\n--\nConsulta movimientos y\ntrazabilidad (solo lectura)." as aud <<person>>
+
+rectangle "**Sistema de Gestion de Inventario**\n**Medico y Devoluciones**\n<size:10>[Sistema de Software]</size>\n--\nPlataforma distribuida que registra pedidos,\ncontrola stock medico por lote y procesa\ndevoluciones parciales de instrumental." as sys <<system>>
+
+staff --> sys : Registra pedidos\ny devoluciones\n<size:9>[HTTPS / App Flutter]</size>
+ware  --> sys : Gestiona inventario\ny despachos\n<size:9>[HTTPS / App Flutter]</size>
+insp  --> sys : Registra resultados\nde inspeccion\n<size:9>[HTTPS / App Flutter]</size>
+adm   --> sys : Administra usuarios\ny catalogo\n<size:9>[HTTPS / App Flutter]</size>
+aud   --> sys : Consulta reportes\ny trazabilidad\n<size:9>[HTTPS / App Flutter]</size>
+
+@enduml

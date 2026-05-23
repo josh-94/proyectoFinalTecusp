@@ -1,0 +1,91 @@
+spring:
+  application:
+    name: api-gateway
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8081/auth/.well-known/jwks.json}
+
+  cloud:
+    gateway:
+      routes:
+        # ── identity-service ────────────────────────────────────────────────
+        - id: identity-service
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/auth/**
+
+        # ── identity-service: JWK Set (público, para validación cross-service)
+        - id: identity-jwks
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/.well-known/jwks.json
+
+        # ── inventory-service ────────────────────────────────────────────────
+        - id: inventory-service
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/stock/**
+
+        # ── orders-service ───────────────────────────────────────────────────
+        - id: orders-service
+          uri: ${ORDERS_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/pedidos/**
+
+        # ── returns-service ──────────────────────────────────────────────────
+        - id: returns-service
+          uri: ${RETURNS_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/devoluciones/**
+
+        # ── Swagger / API Docs de cada servicio (acceso directo via gateway) ─
+        - id: identity-swagger
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/docs/identity/**
+          filters:
+            - RewritePath=/docs/identity/(?<segment>.*), /${segment}
+
+        - id: inventory-swagger
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/docs/inventory/**
+          filters:
+            - RewritePath=/docs/inventory/(?<segment>.*), /${segment}
+
+        - id: orders-swagger
+          uri: ${ORDERS_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/docs/orders/**
+          filters:
+            - RewritePath=/docs/orders/(?<segment>.*), /${segment}
+
+        - id: returns-swagger
+          uri: ${RETURNS_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/docs/returns/**
+          filters:
+            - RewritePath=/docs/returns/(?<segment>.*), /${segment}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: when_authorized
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    reactor.netty: INFO
